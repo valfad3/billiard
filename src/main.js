@@ -388,7 +388,7 @@ function touchStatusText(cue) {
   if (!cue || cue.pocketed) return 'Биток в лузе — «Повторить удар»';
   const pick = isPyramid() ? (controls.mode === 'cam' ? ' · двойное касание — биток' : ' · касание шара — биток') : '';
   if (controls.mode === 'cam') return 'Веди пальцем вбок — поворот · касание — навести · ползунок слева — удар · щипок — зум' + pick;
-  return 'Касайся стола — прицел · ползунок слева — сила и удар · ◀ ▶ — точно' + pick;
+  return 'Касание — навести кий · веди пальцем — повернуть · ползунок слева — удар · ◀ ▶ — точно' + pick;
 }
 
 requestAnimationFrame(frame);

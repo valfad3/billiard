@@ -46,6 +46,28 @@ export function createTouchUi(controls) {
     }
   }
 
+  // Чувствительность поворота пальцем — запоминаем в браузере.
+  const sensInput = document.getElementById('sens');
+  const sensVal = document.getElementById('sens-val');
+  const applySens = (pct) => {
+    controls.touchSens = pct / 100;
+    sensInput.value = pct;
+    sensVal.textContent = `${pct}%`;
+  };
+  try {
+    applySens(Number(localStorage.getItem('billiard.touchSens')) || 100);
+  } catch {
+    applySens(100);
+  }
+  sensInput.addEventListener('input', () => {
+    applySens(Number(sensInput.value));
+    try {
+      localStorage.setItem('billiard.touchSens', sensInput.value);
+    } catch {
+      // хранилище недоступно — просто не запомним
+    }
+  });
+
   // Заполнение ползунка показывает текущую силу.
   return {
     update() {

@@ -6,7 +6,7 @@
 //   правая кнопка + тянуть — поворот кия и наклон камеры; щелчок по столу — навести кий;
 //   зажал левую и тянешь вниз — сила; колесо — камера ближе/дальше.
 // ПАЛЕЦ:
-//   'point' — коснулся/ведёшь по столу — кий смотрит на палец;
+//   'point' — касание — навести кий в точку; ведёшь пальцем — кий плавно поворачивается;
 //   'cam'   — ведёшь пальцем вбок — поворот кия, касание — навести кий в точку,
 //             два пальца: щипок — ближе/дальше, вверх-вниз — наклон камеры.
 //   Сила удара — ползунком сбоку (ui/powerSlider.js).
@@ -45,6 +45,7 @@ export function createControls(canvas, onShoot, hooks = {}) {
     cueBall: null,   // биток задаёт main.js
     camDist: 0.9,    // 'cam': расстояние камеры от битка, м
     camPitch: 0.32,  // 'cam': наклон камеры
+    touchSens: 1,    // чувствительность поворота пальцем (ползунок в панели)
     toggleLock() {
       state.locked = !state.locked;
     },
@@ -80,9 +81,10 @@ export function createControls(canvas, onShoot, hooks = {}) {
     if (dx !== 0 || dy !== 0) state.angle = Math.atan2(dy, dx);
   }
 
-  // Короткий щелчок/касание: сначала спрашиваем режим игры, потом — навести кий (в 'cam').
+  // Короткий щелчок/касание: сначала спрашиваем режим игры, потом — навести кий в точку
+  // (в режиме 'cam' и всегда для пальца — у пальца нет "наведения курсором").
   let lastTap = { t: 0, x: 0, y: 0 };
-  function tap(m) {
+  function tap(m, touch = false) {
     const w = worldOf(m);
     const now = performance.now();
     if (now - lastTap.t < 320 && Math.hypot(m.x - lastTap.x, m.y - lastTap.y) < 30) {
@@ -92,7 +94,7 @@ export function createControls(canvas, onShoot, hooks = {}) {
     }
     lastTap = { t: now, x: m.x, y: m.y };
     const taken = hooks.onClick?.(w);
-    if (!taken && state.mode === 'cam' && !state.locked && state.enabled) aimAt(w);
+    if (!taken && (state.mode === 'cam' || touch) && !state.locked && state.enabled) aimAt(w);
   }
 
   // ---------------- МЫШЬ ----------------
@@ -164,7 +166,7 @@ export function createControls(canvas, onShoot, hooks = {}) {
     if (fingers.size === 1) {
       fingerMoved = false;
       fingerTaken = !!hooks.onPress?.(worldOf(m));
-      if (!fingerTaken && state.mode === 'point' && state.enabled && !state.locked) aimAt(worldOf(m));
+      // Кий сразу НЕ прыгает к пальцу: навести в точку — касанием, повернуть — ведением.
     } else if (fingers.size === 2) {
       pinch = twoFingerInfo();
       fingerMoved = true; // это уже не касание
@@ -175,6 +177,7 @@ export function createControls(canvas, onShoot, hooks = {}) {
     const f = fingers.get(e.pointerId);
     if (!f) return;
     const dx = m.x - f.x;
+    const wPrev = worldOf(f); // где палец был на столе до этого движения
     f.x = m.x;
     f.y = m.y;
     if (Math.hypot(m.x - f.sx, m.y - f.sy) > TAP_PX) fingerMoved = true;
@@ -187,16 +190,24 @@ export function createControls(canvas, onShoot, hooks = {}) {
       pinch = now;
       return;
     }
-    if (fingerTaken || !state.enabled || state.locked) return;
-    if (state.mode === 'point') aimAt(worldOf(m));
-    else if (fingerMoved) state.angle += dx * 0.006; // ведёшь вбок — кий поворачивается
+    if (fingerTaken || !state.enabled || state.locked || !fingerMoved) return;
+    const sens = state.touchSens;
+    if (state.mode === 'point') {
+      // Поворачиваем на угол, пропорциональный движению пальца ПОПЕРЁК кия (в метрах стола).
+      // Так не важно, где палец: рядом с битком или далеко — скорость одна и та же.
+      const w = worldOf(m);
+      const across = Math.cos(state.angle) * (w.y - wPrev.y) - Math.sin(state.angle) * (w.x - wPrev.x);
+      state.angle += (across / 3) * sens; // 3 м движения пальца по столу ≈ 1 радиан (57°)
+    } else {
+      state.angle += dx * 0.0015 * sens; // 'cam': ведёшь вбок — кий поворачивается
+    }
   }
 
   function touchUp(e, m) {
     if (!fingers.has(e.pointerId)) return;
     fingers.delete(e.pointerId);
     if (fingers.size < 2) pinch = null;
-    if (fingers.size === 0 && !fingerMoved && !fingerTaken) tap(m);
+    if (fingers.size === 0 && !fingerMoved && !fingerTaken) tap(m, true);
   }
 
   // ---------------- Общие обработчики ----------------
