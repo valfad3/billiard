@@ -68,11 +68,18 @@ export function createTouchUi(controls) {
     }
   });
 
+  // Отметка рекомендуемой силы (школа, уровень 1).
+  const mark = document.createElement('div');
+  mark.className = 'target';
+  slider.append(mark);
+
   // Заполнение ползунка показывает текущую силу.
   return {
-    update() {
+    update(target = null) {
       fill.style.height = `${Math.round(controls.power * 100)}%`;
       slider.classList.toggle('disabled', !controls.enabled);
+      mark.hidden = target == null;
+      if (target != null) mark.style.top = `${target * 100}%`;
     },
   };
 }

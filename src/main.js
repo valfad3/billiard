@@ -10,7 +10,8 @@ import { createIntro } from './ui/intro.js';
 import { createRenderer3D } from './render/render3d.js';
 import { drawTable, drawBalls } from './render/table.js';
 import { predictShot, predictPockets } from './physics/predict.js';
-import { drawCue, drawAim, drawPrediction, drawPowerBar } from './render/overlay.js';
+import { drawCue, drawAim, drawPrediction, drawPowerBar, drawSchoolHighlight } from './render/overlay.js';
+import { createSchool } from './school/school.js';
 import { createControls } from './ui/controls.js';
 import { createSpinPicker } from './ui/spinPicker.js';
 import { createExercisesPanel } from './ui/exercises.js';
@@ -36,7 +37,7 @@ const START = [
 // поэтому держим всё в одном объекте.
 const app = {
   balls: [],
-  mode: 'shoot', // 'shoot' — удар, 'arrange' — расстановка, 'pyramid' — игра
+  mode: 'shoot', // 'shoot' — удар, 'arrange' — расстановка, 'pyramid' — игра, 'school' — школа ударов
   isMoving: () => anyMoving(app.balls),
   cue: () => app.balls.find((b) => b.isCue),
 };
@@ -46,6 +47,9 @@ const app = {
 const game = createPyramidGame(canvas);
 let trainingBalls = [];
 const isPyramid = () => app.mode === 'pyramid';
+const isSchool = () => app.mode === 'school';
+// В игре и в школе шары свои, а тренировочные откладываются до возвращения.
+const ownBalls = (mode) => mode === 'pyramid' || mode === 'school';
 
 let beforeShot = START; // позиция перед последним ударом — для кнопки "Повторить"
 
@@ -56,17 +60,22 @@ function placeBalls(layout) {
 // Точка удара по битку — общий объект, его меняет кружок справа.
 const tip = createSpinPicker(document.getElementById('spin'), document.getElementById('spin-label'));
 
+// Удар — один для всех: и мышью/пальцем, и автоматический из школы.
+// demo — показ решения в школе (не засчитывается).
+function shoot(angle, power, demo = false) {
+  const cue = app.cue();
+  if (!cue || cue.pocketed) return;
+  if (isPyramid()) game.beginShot(cue); // судья начинает следить за ударом
+  else if (isSchool()) school.beginShot({ angle, power, side: tip.side, height: tip.height, elevation: tip.elevation }, demo);
+  else beforeShot = app.balls.filter((b) => !b.pocketed).map((b) => b.snapshot());
+  if (autoCamOn()) startShotCamera(angle, power); // до удара: расчёт идёт с текущей позиции
+  strike(cue, angle, power, tip);
+  playCue(power, cue.pos.x);
+}
+
 const controls = createControls(
   canvas,
-  (angle, power) => {
-    const cue = app.cue();
-    if (!cue || cue.pocketed) return;
-    if (isPyramid()) game.beginShot(cue); // судья начинает следить за ударом
-    else beforeShot = app.balls.filter((b) => !b.pocketed).map((b) => b.snapshot());
-    if (autoCamOn()) startShotCamera(angle, power); // до удара: расчёт идёт с текущей позиции
-    strike(cue, angle, power, tip);
-    playCue(power, cue.pos.x);
-  },
+  (angle, power) => shoot(angle, power),
   {
     // В пирамиде: на разбое можно таскать жёлтый шар, щелчок по шару — выбрать биток.
     onPress: (p) => isPyramid() && game.onPress(p),
@@ -92,6 +101,20 @@ document.getElementById('btn-panel').addEventListener('click', () => {
 
 createArranger(canvas, app);
 placeBalls(START);
+
+// Школа ударов: каталог, уровни, проверка и разбор ошибок.
+const school = createSchool({
+  tip,
+  controls,
+  shoot,
+  setSpinHint: (h) => tip.setHint(h),
+  setSpinMap: (map, user) => tip.setMap(map, user),
+  onExercise: () => {
+    app.balls = school.balls;
+    predictionEpoch++;
+    autoCam.phase = 'aim'; // камера — сразу за кий
+  },
+});
 
 // Упражнения: что сохраняем и как восстанавливаем.
 createExercisesPanel({
@@ -128,14 +151,17 @@ const physicsEvents = {
   ball(a, b, speed) {
     playBallHit(speed, (a.pos.x + b.pos.x) / 2);
     if (isPyramid()) game.events.ball(a, b);
+    if (isSchool()) school.events.ball(a, b);
   },
   cushion(ball, speed) {
     playCushion(speed, ball.pos.x);
     if (isPyramid()) game.events.cushion(ball);
+    if (isSchool()) school.events.cushion(ball);
   },
   pocket(ball, speed) {
     playPocket(speed, ball.pos.x);
     if (isPyramid()) game.events.pocket(ball);
+    if (isSchool()) school.events.pocket(ball);
   },
 };
 
@@ -143,32 +169,45 @@ const physicsEvents = {
 const btnShoot = document.getElementById('btn-mode-shoot');
 const btnArrange = document.getElementById('btn-mode-arrange');
 const btnPyramid = document.getElementById('btn-mode-pyramid');
+const btnSchool = document.getElementById('btn-mode-school');
 
 function setMode(mode) {
   if (app.isMoving()) return; // пока шары катятся, режим не меняем
-  const wasPyramid = isPyramid();
-  if (mode === 'pyramid' && !wasPyramid) {
-    trainingBalls = app.balls;   // откладываем шары тренировки
-    if (!game.started) game.start();
-    app.balls = game.balls;
-  } else if (mode !== 'pyramid' && wasPyramid) {
-    app.balls = trainingBalls;   // возвращаем шары тренировки
+  if (!ownBalls(app.mode) && ownBalls(mode)) trainingBalls = app.balls; // откладываем тренировку
+  if (ownBalls(app.mode) && !ownBalls(mode)) app.balls = trainingBalls; // возвращаем тренировку
+  if (app.mode === 'school' && mode !== 'school') {
+    tip.setHint(null); // подсказки школы на кружке точки удара больше не нужны
+    tip.setMap(null);
   }
   app.mode = mode;
+  if (mode === 'pyramid') {
+    if (!game.started) game.start();
+    app.balls = game.balls;
+  }
+  if (mode === 'school') {
+    school.start();
+    app.balls = school.balls;
+  }
   btnShoot.classList.toggle('active', mode === 'shoot');
   btnArrange.classList.toggle('active', mode === 'arrange');
   btnPyramid.classList.toggle('active', mode === 'pyramid');
+  btnSchool.classList.toggle('active', mode === 'school');
   // Что показывать в каждом режиме
-  document.getElementById('training-buttons').hidden = mode === 'pyramid';
-  document.getElementById('training-panel').hidden = mode === 'pyramid';
+  document.getElementById('training-buttons').hidden = ownBalls(mode);
+  document.getElementById('training-panel').hidden = ownBalls(mode);
   document.getElementById('game-panel').hidden = mode !== 'pyramid';
+  document.getElementById('school-panel').hidden = mode !== 'school';
+  document.getElementById('school-more').hidden = mode !== 'school';
+  document.body.classList.toggle('school-mode', mode === 'school');
 }
 btnShoot.addEventListener('click', () => setMode('shoot'));
 btnArrange.addEventListener('click', () => setMode('arrange'));
 btnPyramid.addEventListener('click', () => setMode('pyramid'));
+btnSchool.addEventListener('click', () => setMode('school'));
 
-// Стартовый экран с кнопками "Начать тренировку" и "Свободная пирамида".
-createIntro({
+// Стартовый экран с кнопками "Школа ударов", "Свободная тренировка" и "Свободная пирамида".
+const intro = createIntro({
+  onSchool: () => setMode('school'),
   onTrain: () => setMode('shoot'),
   onPyramid: () => setMode('pyramid'),
 });
@@ -203,8 +242,8 @@ document.addEventListener('click', (e) => {
 // Клавиши: R — повторить удар, T — вкл/выкл траекторию.
 // e.code (а не e.key) — чтобы работало и на русской раскладке.
 window.addEventListener('keydown', (e) => {
-  if (e.target.tagName === 'INPUT' || e.repeat) return;
-  if (e.code === 'KeyR' && !isPyramid()) repeatShot(); // в игре переигрывать нельзя
+  if (e.target.tagName === 'INPUT' || e.repeat || intro.isOpen()) return;
+  if (e.code === 'KeyR' && !ownBalls(app.mode)) repeatShot(); // в игре и школе — свои кнопки
   if (e.code === 'KeyT') chkPredict.checked = !chkPredict.checked;
 });
 
@@ -212,11 +251,13 @@ window.addEventListener('keydown', (e) => {
 // точка удара) — иначе тяжёлый расчёт шёл бы 60 раз в секунду впустую.
 let prediction = [];
 let predictionKey = '';
-function updatePrediction(cue) {
-  const key = [controls.angle, controls.power, tip.side, tip.height, tip.elevation].join('|');
+let predictionEpoch = 0;
+function updatePrediction(power) {
+  // predictionEpoch меняется при каждой новой расстановке школы — шары другие, расчёт нужен заново.
+  const key = [controls.angle, power, tip.side, tip.height, tip.elevation, predictionEpoch].join('|');
   if (key === predictionKey) return;
   predictionKey = key;
-  prediction = predictShot(app.balls, controls.angle, controls.power, tip);
+  prediction = predictShot(app.balls, controls.angle, power, tip);
 }
 
 // --- Авто-камера в 3D ---
@@ -274,7 +315,7 @@ const autoCamera = () => {
 };
 document.getElementById('btn-cam-cue').addEventListener('click', autoCamera);
 window.addEventListener('keydown', (e) => {
-  if (e.target.tagName === 'INPUT' || e.repeat) return;
+  if (e.target.tagName === 'INPUT' || e.repeat || intro.isOpen()) return;
   if (e.code === 'KeyV') setView(!view3D);
   if (e.code === 'KeyC' && view3D) autoCamera();
 });
@@ -291,6 +332,7 @@ function resize() {
 }
 window.addEventListener('resize', resize);
 resize();
+setView(true); // сайт открывается сразу в 3D (2D — кнопкой или клавишей V)
 
 // Главный цикл. Браузер вызывает frame() ~60 раз в секунду, а физику мы
 // считаем мелкими шагами по 1 мс — так быстрые шары не "проскакивают" друг друга.
@@ -314,6 +356,10 @@ function frame(now) {
     game.update(); // судья: следит за ударом и выносит решение, когда шары встали
     app.balls = game.balls;
   }
+  if (isSchool()) {
+    school.update(); // школа: когда шары встали — разбирает удар
+    app.balls = school.balls;
+  }
 
   const moving = app.isMoving();
   const cue = app.cue();
@@ -321,27 +367,51 @@ function frame(now) {
   if (camAuto) updateAutoCamPhase(simDt, moving);
   else autoCam.phase = 'aim';
   controls.mode = camAuto ? 'cam' : 'point';
+  // Пока открыт стартовый экран, игра на фоне не реагирует на мышь и клавиши.
+  controls.paused = intro.isOpen();
   controls.cueBall = cue;
   controls.enabled =
     app.mode !== 'arrange' && !moving && cue && !cue.pocketed &&
     !(isPyramid() && game.phase === 'over') &&
+    !(isSchool() && !school.manualAllowed()) && // в школе на уровнях 2–3 бьёт программа
     !(camAuto && autoCam.phase !== 'aim'); // пока камера показывает удар — бить нельзя
+  // Кий виден и когда бьёт программа (школа, уровни 2–3) — чтобы видеть, куда пойдёт удар.
+  const cueVisible = controls.enabled ||
+    (isSchool() && school.phase === 'ready' && !moving && cue && !cue.pocketed && autoCam.phase === 'aim');
 
   const rect = canvas.getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, rect.width, rect.height);
 
-  const showPrediction = controls.enabled && controls.pulling && controls.power > 0.02 && chkPredict.checked;
-  if (showPrediction) updatePrediction(cue);
+  // Траектория: в тренировке — при натяге (если включена галочка); в школе на уровне 1 —
+  // всегда (с рекомендуемой силой, пока не тянешь); на остальных уровнях школы — никогда.
+  let predPower = null;
+  if (controls.enabled) {
+    const pulled = controls.pulling && controls.power > 0.02;
+    if (isSchool()) {
+      if (school.showPrediction()) predPower = pulled ? controls.power : school.recommendedPower();
+    } else if (pulled && chkPredict.checked) predPower = controls.power;
+  }
+  const showPrediction = predPower !== null;
+  if (showPrediction) updatePrediction(predPower);
   else predictionKey = '';
-  const aim = controls.enabled && !showPrediction ? traceAim(cue.pos, controls.angle, app.balls, cue) : null;
+  const aimAllowed = !isSchool() || school.showAimLine();
+  const aim = cueVisible && !showPrediction && aimAllowed ? traceAim(cue.pos, controls.angle, app.balls, cue) : null;
+
+  // Школа: что подсветить на столе (лузу и зелёную зону).
+  const exHl = isSchool() ? school.highlight() : null;
+  const hl = exHl
+    ? { pocket: exHl.pocket != null ? school.pocketPoint(exHl.pocket) : null, zone: exHl.zone || null }
+    : null;
+  const powerTarget = isSchool() ? school.recommendedPower() : null;
 
   if (view3D) {
     // 3D рисует всё сам, на верхнем прозрачном холсте — только полоска силы.
     r3d.render({
-      balls: app.balls, simDt, frameDt, cue, showCue: controls.enabled, controls, tip, aim,
+      balls: app.balls, simDt, frameDt, cue, showCue: cueVisible, controls, tip, aim,
       prediction: showPrediction ? prediction : null,
+      school: hl,
       cam: {
         phase: autoCam.phase,
         cue: cue && !cue.pocketed ? cue : null,
@@ -356,14 +426,15 @@ function frame(now) {
   } else {
     applyRotation(ctx, dpr); // на вертикальном экране стол рисуется повёрнутым
     drawTable(ctx);
+    drawSchoolHighlight(ctx, hl);
     if (showPrediction) drawPrediction(ctx, prediction);
     else if (aim) drawAim(ctx, cue, aim);
     drawBalls(ctx, app.balls);
-    if (controls.enabled) drawCue(ctx, cue, controls, tip.elevation);
+    if (cueVisible) drawCue(ctx, cue, controls, tip.elevation);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // дальше — элементы поверх экрана, без поворота
   }
-  if (isTouch()) touchUi.update(); // на телефоне сила — на экранном ползунке
-  else drawPowerBar(ctx, controls.power, rect.height);
+  if (isTouch()) touchUi.update(powerTarget); // на телефоне сила — на экранном ползунке
+  else drawPowerBar(ctx, controls.power, rect.height, powerTarget);
 
   btnLock.classList.toggle('active', controls.locked);
   statusEl.textContent = statusText(moving, cue);
@@ -372,6 +443,7 @@ function frame(now) {
 
 function statusText(moving, cue) {
   if (moving) return 'Шары катятся…';
+  if (isSchool()) return school.statusText();
   if (isTouch()) return touchStatusText(cue);
   if (isPyramid()) return game.statusText();
   if (app.mode === 'arrange') {

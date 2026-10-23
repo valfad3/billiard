@@ -621,6 +621,45 @@ export function createRenderer3D(glCanvas, eventCanvas) {
   cueRing.rotation.x = -Math.PI / 2;
   scene.add(cueRing);
 
+  // --- Школа: подсветка нужной лузы и зелёной зоны для битка ---
+  const hlPocketMat = new THREE.MeshBasicMaterial({ color: 0xffd246, transparent: true, opacity: 0.9 });
+  const hlPocket = new THREE.Mesh(new THREE.TorusGeometry(1, 0.08, 10, 56), hlPocketMat);
+  hlPocket.rotation.x = -Math.PI / 2;
+  hlPocket.visible = false;
+  const hlZone = new THREE.Group();
+  const zoneFill = new THREE.Mesh(
+    new THREE.CircleGeometry(1, 48),
+    new THREE.MeshBasicMaterial({ color: 0x3cdc6e, transparent: true, opacity: 0.2, depthWrite: false }),
+  );
+  const zoneEdge = new THREE.Mesh(
+    new THREE.RingGeometry(0.94, 1, 64),
+    new THREE.MeshBasicMaterial({ color: 0x50f082, transparent: true, opacity: 0.85, depthWrite: false }),
+  );
+  hlZone.add(zoneFill, zoneEdge);
+  hlZone.rotation.x = -Math.PI / 2;
+  hlZone.visible = false;
+  scene.add(hlPocket, hlZone);
+
+  function drawSchool(hl) {
+    hlPocket.visible = !!hl?.pocket;
+    if (hl?.pocket) {
+      // Кольцо — вокруг 3D-лузы, ближайшей к нужной точке, поверх рамы.
+      let p = POCKET_CIRCLES[0];
+      for (const q of POCKET_CIRCLES) {
+        if (Math.hypot(q.c.x - hl.pocket.x, q.c.y - hl.pocket.y) < Math.hypot(p.c.x - hl.pocket.x, p.c.y - hl.pocket.y)) p = q;
+      }
+      const s = p.r + 0.012;
+      hlPocket.scale.set(s, s, s);
+      hlPocket.position.set(p.c.x, FRAME_H + 0.016, p.c.y);
+      hlPocketMat.opacity = 0.55 + 0.4 * Math.sin(performance.now() / 260);
+    }
+    hlZone.visible = !!hl?.zone;
+    if (hl?.zone) {
+      hlZone.scale.set(hl.zone.r, hl.zone.r, 1);
+      hlZone.position.set(hl.zone.x, 0.0015, hl.zone.y);
+    }
+  }
+
   // --- Кий: наклейка, белый наконечник, светлое древко, тёмный турняк ---
   const cueStick = new THREE.Group();
   const part = (rTop, rBottom, length, y, color) => {
@@ -911,6 +950,7 @@ export function createRenderer3D(glCanvas, eventCanvas) {
 
       drawAim(state.cue, state.prediction ? null : state.aim);
       drawPrediction(state.prediction);
+      drawSchool(state.school);
 
       renderer.render(scene, camera);
     },

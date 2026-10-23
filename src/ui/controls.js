@@ -46,6 +46,7 @@ export function createControls(canvas, onShoot, hooks = {}) {
     camDist: 0.9,    // 'cam': расстояние камеры от битка, м
     camPitch: 0.32,  // 'cam': наклон камеры
     touchSens: 1,    // чувствительность поворота пальцем (ползунок в панели)
+    paused: false,   // true — поверх открыто окно (стартовый экран): игра не слушает мышь и клавиши
     toggleLock() {
       state.locked = !state.locked;
     },
@@ -144,7 +145,7 @@ export function createControls(canvas, onShoot, hooks = {}) {
   }
 
   canvas.addEventListener('wheel', (e) => {
-    if (state.mode !== 'cam') return;
+    if (state.mode !== 'cam' || state.paused) return;
     e.preventDefault();
     state.camDist = Math.max(0.35, Math.min(3, state.camDist * (1 + e.deltaY * 0.001)));
   }, { passive: false });
@@ -212,12 +213,14 @@ export function createControls(canvas, onShoot, hooks = {}) {
 
   // ---------------- Общие обработчики ----------------
   canvas.addEventListener('pointerdown', (e) => {
+    if (state.paused) return;
     const m = pos(e);
     if (e.pointerType === 'mouse') mouseDown(e, m);
     else touchDown(e, m);
   });
   // Движение и отпускание слушаем на всём окне — чтобы натяг не обрывался, если мышь ушла с холста.
   window.addEventListener('pointermove', (e) => {
+    if (state.paused) return;
     const m = pos(e);
     if (e.pointerType === 'mouse') mouseMove(e, m);
     else touchMove(e, m);
@@ -234,7 +237,7 @@ export function createControls(canvas, onShoot, hooks = {}) {
 
   // Точная доводка прицела: стрелки ← → поворачивают кий на 0.1°, с Shift — на 1°.
   window.addEventListener('keydown', (e) => {
-    if (e.target.tagName === 'INPUT') return; // человек печатает в поле — не мешаем
+    if (e.target.tagName === 'INPUT' || state.paused) return; // печатают в поле или открыт стартовый экран
     if (e.code === 'Space') {
       e.preventDefault(); // чтобы страница не прокручивалась
       if (!e.repeat) state.toggleLock();

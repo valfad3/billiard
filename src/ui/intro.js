@@ -3,7 +3,7 @@
 // Открыть снова — кнопка ℹ в шапке.
 const KEY = 'billiard.introHidden';
 
-export function createIntro({ onTrain, onPyramid }) {
+export function createIntro({ onSchool, onTrain, onPyramid }) {
   const el = document.getElementById('intro');
   const hideBox = document.getElementById('intro-hide');
 
@@ -28,6 +28,10 @@ export function createIntro({ onTrain, onPyramid }) {
     el.hidden = true;
   };
 
+  document.getElementById('intro-school').addEventListener('click', () => {
+    close();
+    onSchool();
+  });
   document.getElementById('intro-train').addEventListener('click', () => {
     close();
     onTrain();

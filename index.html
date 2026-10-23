@@ -33,6 +33,7 @@
         <button id="btn-mode-shoot" class="active">Удар</button>
         <button id="btn-mode-arrange">Расстановка</button>
         <button id="btn-mode-pyramid">Пирамида</button>
+        <button id="btn-mode-school">Школа</button>
       </div>
       <div class="buttons">
         <button id="btn-intro" title="О тренажёре">ℹ</button>
@@ -66,6 +67,27 @@
         <button id="btn-panel" class="mobile-only">☰ Панель</button>
       </div>
       <aside>
+        <section id="school-panel" hidden>
+          <h2>Школа ударов</h2>
+          <div id="school-levels" class="school-levels"></div>
+          <p id="school-level-name" class="school-level-name"></p>
+          <p id="school-level-desc" class="hint"></p>
+
+          <div id="school-task" class="school-task"></div>
+          <div id="school-power-row" class="school-power-row">
+            <span id="school-power-text"></span>
+            <input type="range" id="school-power" min="5" max="100" step="1" value="40" />
+          </div>
+          <div class="school-actions">
+            <button id="school-shoot" class="primary">Ударить</button>
+            <button id="school-demo">Показать решение</button>
+            <button id="school-retry">Ещё раз</button>
+            <button id="school-next">Следующий удар →</button>
+          </div>
+          <pre id="school-result" hidden></pre>
+          <hr />
+        </section>
+
         <section id="game-panel" hidden>
           <h2>Свободная пирамида</h2>
           <div class="score">
@@ -92,6 +114,18 @@
           Подъём кия: <b id="elev-val">0°</b>
           <input type="range" id="elev" min="0" max="80" step="1" value="0" />
         </label>
+
+        <!-- Школа: теория и список ударов — под точкой удара -->
+        <section id="school-more" hidden>
+          <details id="school-theory" class="school-theory" open>
+            <summary id="school-theory-title"></summary>
+            <div id="school-theory-body"></div>
+          </details>
+          <h2>Удары</h2>
+          <div id="school-catalog" class="school-catalog"></div>
+          <hr />
+        </section>
+
         <p class="hint">
           Щёлкни или тяни точку по шару.<br />
           Вверх — накат, вниз — оттяжка, вбок — винт.<br />
@@ -146,9 +180,12 @@
           <li><span class="tip tip-side"></span><div><b>Винт</b>Сбоку — меняет отскок от борта и «отбрасывает» шар</div></li>
           <li><span class="tip tip-masse"></span><div><b>Массе</b>Поднятый кий и удар сбоку — шар идёт дугой</div></li>
         </ul>
-        <p class="intro-extra">А ещё: 2D и 3D, подсказка траектории, сохранение упражнений и игра «Свободная пирамида» на счёт.</p>
+        <p class="intro-extra">В «Школе ударов» — теория по каждому удару, чужие и свояки в тысячах случайных позиций и 4 уровня сложности: от «смотри и повторяй» до «всё сам». А ещё: 2D и 3D, свободная пирамида на счёт.</p>
         <div class="intro-buttons">
-          <button id="intro-train" class="primary">Начать тренировку</button>
+          <button id="intro-school" class="primary">Школа ударов</button>
+        </div>
+        <div class="intro-buttons intro-secondary">
+          <button id="intro-train">Свободная тренировка</button>
           <button id="intro-pyramid">Свободная пирамида</button>
         </div>
         <label class="intro-hide"><input type="checkbox" id="intro-hide" /> Больше не показывать при запуске</label>

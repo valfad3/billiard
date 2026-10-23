@@ -57,6 +57,28 @@ export function createSpinPicker(canvas, labelEl) {
     ctx.lineTo(c, c + r);
     ctx.stroke();
 
+    // Школа: карта после промаха — где на битке удар срабатывает (зелёные точки)
+    if (overlay.map) {
+      for (const p of overlay.map) {
+        ctx.fillStyle = p.ok ? 'rgba(40,200,90,0.85)' : 'rgba(0,0,0,0.12)';
+        ctx.beginPath();
+        ctx.arc(c + p.side * r, c - p.height * r, p.ok ? 4.5 : 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Школа: подсказка "бей сюда" — пунктирное зелёное кольцо
+    if (overlay.hint) {
+      ctx.strokeStyle = '#2bd36a';
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.arc(c + overlay.hint.side * r, c - overlay.hint.height * r, 12, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.lineWidth = 1;
+    }
+
     // Точка удара (вверх на экране = выше центра шара)
     const px = c + tip.side * r;
     const py = c - tip.height * r;
@@ -68,6 +90,21 @@ export function createSpinPicker(canvas, labelEl) {
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.lineWidth = 1;
+
+    // Школа: куда ударил ты — красный крестик поверх всего
+    if (overlay.map && overlay.user) {
+      const ux = c + overlay.user.side * r;
+      const uy = c - overlay.user.height * r;
+      ctx.strokeStyle = '#ff3b3b';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(ux - 8, uy - 8);
+      ctx.lineTo(ux + 8, uy + 8);
+      ctx.moveTo(ux + 8, uy - 8);
+      ctx.lineTo(ux - 8, uy + 8);
+      ctx.stroke();
+      ctx.lineWidth = 1;
+    }
 
     labelEl.textContent = describe(tip);
   }
@@ -108,6 +145,18 @@ export function createSpinPicker(canvas, labelEl) {
   });
   canvas.addEventListener('pointermove', (e) => dragging && setFromMouse(e));
   canvas.addEventListener('pointerup', () => (dragging = false));
+
+  // Для школы: подсказка, куда бить, и карта удачных точек после промаха.
+  const overlay = { hint: null, map: null, user: null };
+  tip.setHint = (h) => {
+    overlay.hint = h;
+    draw();
+  };
+  tip.setMap = (map, user) => {
+    overlay.map = map;
+    overlay.user = user || null;
+    draw();
+  };
 
   // Задать точку удара из кода (например, при загрузке упражнения).
   tip.set = (side, height, elevation = 0) => {

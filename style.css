@@ -653,3 +653,210 @@ body.touch #fine-aim {
     padding: 9px 10px;
   }
 }
+
+/* ===================== Школа ударов ===================== */
+body.school-mode aside {
+  width: 300px;
+  text-align: left;
+}
+body.school-mode aside h2,
+body.school-mode aside #spin,
+body.school-mode aside #spin-label {
+  text-align: center;
+}
+body.school-mode aside #spin {
+  display: block;
+  margin: 0 auto;
+}
+
+.school-levels {
+  display: flex;
+  gap: 6px;
+}
+.school-levels button {
+  flex: 1;
+  padding: 8px 0;
+  font-weight: 700;
+}
+.school-levels button.active {
+  background: #2b6fb3;
+  border-color: #2b6fb3;
+  color: #fff;
+}
+.school-level-name {
+  margin: 10px 0 2px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.school-task {
+  margin: 12px 0 8px;
+  padding: 10px 12px;
+  border-left: 3px solid #e6bd43;
+  border-radius: 6px;
+  background: rgba(230, 189, 67, 0.08);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.school-power-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: #ccc;
+}
+.school-power-row input {
+  accent-color: #e6bd43;
+}
+
+.school-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.school-actions button {
+  padding: 8px 6px;
+  font-size: 13px;
+}
+.school-actions .primary {
+  grid-column: 1 / -1;
+  border-color: #e6bd43;
+  background: #e6bd43;
+  color: #1a1408;
+  font-weight: 700;
+}
+.school-actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+#school-next {
+  grid-column: 1 / -1;
+}
+
+#school-result {
+  margin: 10px 0 0;
+  padding: 10px;
+  border-radius: 8px;
+  font: 13px/1.45 system-ui, sans-serif;
+  white-space: pre-wrap;
+}
+#school-result.good {
+  background: #23442b;
+}
+#school-result.bad {
+  background: #4a2626;
+}
+#school-result.info {
+  background: #263a4a;
+}
+
+.school-theory {
+  margin: 14px 0 6px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #c9c1b3;
+}
+.school-theory summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #fff;
+}
+.school-theory p {
+  margin: 8px 0 0;
+}
+
+.school-catalog {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.shot-group {
+  margin: 8px 0 2px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8f877a;
+}
+.shot-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px;
+  text-align: left;
+  background: #2a2a2a;
+}
+.shot-item.active {
+  border-color: #e6bd43;
+  background: #3a3322;
+}
+.shot-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.shot-text b {
+  font-size: 13px;
+}
+.shot-text small {
+  font-size: 11px;
+  color: #9a9284;
+}
+.shot-stat {
+  font-size: 11px;
+  font-style: normal;
+  color: #8fd19e;
+}
+/* Мини-биток с точкой удара */
+.tip-mini {
+  position: relative;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff6d0, #e6bd43 40%, #8a6714);
+  font-size: 16px;
+  line-height: 26px;
+  text-align: center;
+}
+.tip-mini:empty::after {
+  content: '';
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  border-radius: 50%;
+  background: #2b6fb3;
+  box-shadow: 0 0 0 1.5px #fff;
+}
+
+@media (max-width: 900px) {
+  body.school-mode aside {
+    width: auto;
+  }
+}
+
+/* Отметка рекомендуемой силы на сенсорном ползунке */
+#power-slider .target {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  margin-top: -1.5px;
+  background: #2bd36a;
+  box-shadow: 0 0 6px #2bd36a;
+}
+
+.intro-secondary {
+  margin-top: 8px;
+}
+.intro-secondary button {
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 500;
+}

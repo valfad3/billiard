@@ -145,7 +145,37 @@ export function drawPrediction(ctx, paths) {
   ctx.restore();
 }
 
-export function drawPowerBar(ctx, power, canvasHeight) {
+// Школа: подсветка нужной лузы (пульсирующее жёлтое кольцо) и зелёной зоны для битка.
+// hl: { pocket: {x, y} | null, zone: {x, y, r} | null }
+export function drawSchoolHighlight(ctx, hl) {
+  if (!hl) return;
+  const pulse = 0.6 + 0.4 * Math.sin(performance.now() / 260);
+  ctx.save();
+  if (hl.zone) {
+    const z = toScreen(hl.zone.x, hl.zone.y);
+    const r = hl.zone.r * view.scale;
+    ctx.fillStyle = 'rgba(60, 220, 110, 0.18)';
+    ctx.beginPath();
+    ctx.arc(z.x, z.y, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(80, 240, 130, 0.85)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 5]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  if (hl.pocket) {
+    const p = toScreen(hl.pocket.x, hl.pocket.y);
+    ctx.strokeStyle = `rgba(255, 210, 70, ${pulse})`;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 0.075 * view.scale, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+export function drawPowerBar(ctx, power, canvasHeight, target = null) {
   const x = 16, w = 14, h = Math.min(220, canvasHeight * 0.5);
   const y = (canvasHeight - h) / 2;
   ctx.fillStyle = 'rgba(0,0,0,0.45)';
@@ -159,4 +189,15 @@ export function drawPowerBar(ctx, power, canvasHeight) {
   ctx.font = '12px sans-serif';
   ctx.textAlign = 'left';
   ctx.fillText(`${Math.round(power * 100)}%`, x - 2, y - 8);
+  // Школа: отметка рекомендуемой силы — зелёная риска сбоку от полоски.
+  if (target != null) {
+    const ty = y + h * (1 - target);
+    ctx.strokeStyle = '#2bd36a';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x - 4, ty);
+    ctx.lineTo(x + w + 6, ty);
+    ctx.stroke();
+    ctx.lineWidth = 1;
+  }
 }
