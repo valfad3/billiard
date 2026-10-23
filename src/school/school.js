@@ -214,6 +214,7 @@ export function createSchool(ctx) {
       text.append(t, s);
       b.append(icon, text, stat);
       b.addEventListener('click', () => {
+        ctx.onAction?.(); // на телефоне — закрыть шторку, чтобы увидеть новую позицию
         school.type = id;
         newExercise();
       });
@@ -241,6 +242,7 @@ export function createSchool(ctx) {
       b.title = lv.name;
       b.dataset.n = lv.n;
       b.addEventListener('click', () => {
+        ctx.onAction?.();
         school.level = lv.n;
         if (school.ex) retry();
         else render();
@@ -273,8 +275,15 @@ export function createSchool(ctx) {
         body.append(para);
       }
     }
-    el('school-task').textContent =
+    const taskText =
       school.phase === 'loading' ? 'Готовлю удар…' : ex ? ex.task : 'Выбери удар из списка ниже или «Случайный микс».';
+    el('school-task').textContent = taskText;
+    // Полоска с заданием поверх стола (на телефоне): задание и итог последнего удара.
+    const banner = el('school-banner');
+    const result = el('school-result');
+    const verdict = !result.hidden && school.phase === 'result' ? result.textContent.split('\n')[0] : '';
+    banner.textContent = verdict ? `${verdict}  Подробности — в панели.\n${taskText}` : taskText;
+    banner.className = 'mobile-only ' + (verdict ? result.className : '');
     // Сила: на уровне 3 выбираешь сам, на 1 и 2 — подсказка.
     const powerRow = el('school-power-row');
     powerRow.hidden = !ex || school.level === 4;
@@ -294,10 +303,15 @@ export function createSchool(ctx) {
     el('school-next').disabled = school.phase === 'shooting' || school.phase === 'demo' || school.phase === 'loading';
   }
 
-  el('school-shoot').addEventListener('click', () => autoShot(false));
-  el('school-demo').addEventListener('click', () => autoShot(true));
-  el('school-retry').addEventListener('click', retry);
-  el('school-next').addEventListener('click', newExercise);
+  // Каждое действие на телефоне закрывает шторку — чтобы был виден стол и удар.
+  const act = (fn) => () => {
+    ctx.onAction?.();
+    fn();
+  };
+  el('school-shoot').addEventListener('click', act(() => autoShot(false)));
+  el('school-demo').addEventListener('click', act(() => autoShot(true)));
+  el('school-retry').addEventListener('click', act(retry));
+  el('school-next').addEventListener('click', act(newExercise));
   el('school-power').addEventListener('input', render);
 
   buildCatalog();

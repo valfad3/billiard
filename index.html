@@ -58,12 +58,13 @@
       <div id="stage">
         <canvas id="gl" hidden></canvas>
         <canvas id="table"></canvas>
-        <!-- Только на телефоне: ползунок силы, доводка прицела, кнопка панели -->
-        <div id="power-slider" class="touch-only"><div class="fill"></div><span>Сила</span></div>
-        <div id="fine-aim" class="touch-only">
+        <!-- Только на телефоне: снизу — доводка прицела и полоса силы, сверху — задание школы и кнопка панели -->
+        <div id="touch-bar" class="touch-only">
           <button id="aim-left" aria-label="Повернуть кий влево">◀</button>
+          <div id="power-slider"><div class="fill"></div><span>Сила — веди вправо, отпусти — удар</span></div>
           <button id="aim-right" aria-label="Повернуть кий вправо">▶</button>
         </div>
+        <div id="school-banner" class="mobile-only" hidden></div>
         <button id="btn-panel" class="mobile-only">☰ Панель</button>
       </div>
       <aside>

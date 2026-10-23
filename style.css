@@ -338,68 +338,98 @@ body.touch .touch-only {
   display: block;
 }
 
-/* Ползунок силы: тянешь вниз — кий отводится, отпускаешь — удар */
-#power-slider {
+/* Нижняя панель телефона: ◀ [полоса силы] ▶ */
+body.touch #touch-bar {
   position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 46px;
-  height: 46%;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#touch-bar button {
+  flex-shrink: 0;
+  width: 50px;
+  height: 46px;
+  border-radius: 23px;
+  font-size: 18px;
+  background: rgba(0, 0, 0, 0.55);
+  touch-action: none;
+}
+
+/* Полоса силы: ведёшь пальцем вправо — кий отводится, отпускаешь — удар */
+#power-slider {
+  position: relative;
+  flex: 1;
+  height: 46px;
   border: 1px solid rgba(255, 255, 255, 0.35);
   border-radius: 23px;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.5);
   overflow: hidden;
-  z-index: 5;
 }
 #power-slider .fill {
   position: absolute;
   top: 0;
+  bottom: 0;
   left: 0;
-  right: 0;
-  height: 0;
-  background: linear-gradient(#3fae5a, #e0b23a 60%, #d9483b);
+  width: 0;
+  background: linear-gradient(90deg, #3fae5a, #e0b23a 60%, #d9483b);
 }
 #power-slider span {
   position: absolute;
-  bottom: 8px;
-  width: 100%;
-  text-align: center;
-  font-size: 11px;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
   color: #ddd;
   pointer-events: none;
+  text-shadow: 0 1px 2px #000;
 }
 #power-slider.disabled {
   opacity: 0.35;
 }
-
-/* Доводка прицела */
-#fine-aim {
+/* Отметка рекомендуемой силы (школа, уровень 1) */
+#power-slider .target {
   position: absolute;
-  left: 50%;
-  bottom: 12px;
-  transform: translateX(-50%);
-  z-index: 5;
-}
-body.touch #fine-aim {
-  display: flex;
-  gap: 14px;
-}
-#fine-aim button {
-  width: 54px;
-  height: 44px;
-  border-radius: 22px;
-  font-size: 18px;
-  background: rgba(0, 0, 0, 0.5);
-  touch-action: none;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  margin-left: -1.5px;
+  background: #2bd36a;
+  box-shadow: 0 0 6px #2bd36a;
 }
 
 #btn-panel {
   position: absolute;
-  right: 12px;
-  bottom: 12px;
+  right: 10px;
+  top: 10px;
   z-index: 30;
   background: rgba(30, 30, 30, 0.85);
+}
+
+/* Задание школы поверх стола (телефон). Нажатие — открыть панель. */
+#school-banner {
+  position: absolute;
+  left: 10px;
+  right: 120px;
+  top: 10px;
+  z-index: 6;
+  padding: 7px 10px;
+  border-left: 3px solid #e6bd43;
+  border-radius: 8px;
+  background: rgba(20, 18, 15, 0.82);
+  font-size: 12px;
+  line-height: 1.35;
+  white-space: pre-line;
+}
+#school-banner.good {
+  border-left-color: #3fd36f;
+}
+#school-banner.bad {
+  border-left-color: #e05050;
 }
 
 @media (max-width: 900px) {
@@ -449,9 +479,6 @@ body.touch #fine-aim {
   }
   body.panel-open aside {
     transform: none;
-  }
-  body.panel-open #btn-panel {
-    bottom: calc(60vh + 10px);
   }
 
   footer {
@@ -839,17 +866,6 @@ body.school-mode aside #spin {
   body.school-mode aside {
     width: auto;
   }
-}
-
-/* Отметка рекомендуемой силы на сенсорном ползунке */
-#power-slider .target {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 3px;
-  margin-top: -1.5px;
-  background: #2bd36a;
-  box-shadow: 0 0 6px #2bd36a;
 }
 
 .intro-secondary {

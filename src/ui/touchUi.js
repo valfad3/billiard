@@ -1,5 +1,5 @@
 // Экранные элементы для телефона:
-//   • ползунок силы — тянешь вниз, кий отводится; отпустил — удар; вернул вверх — отмена;
+//   • полоса силы внизу — ведёшь пальцем вправо, кий отводится; отпустил — удар; вернул влево — отмена;
 //   • кнопки ◀ ▶ — точная доводка прицела (держишь — крутится всё быстрее).
 import { capture } from './controls.js';
 
@@ -8,17 +8,19 @@ export function createTouchUi(controls) {
   const fill = slider.querySelector('.fill');
   slider.style.touchAction = 'none';
 
-  const setFromY = (clientY) => {
+  // Заливка идёт от левого края полосы до пальца: чем правее палец — тем сильнее удар.
+  // Увёл палец к левому краю и отпустил — удар отменяется.
+  const setFromX = (clientX) => {
     const r = slider.getBoundingClientRect();
-    controls.power = Math.max(0, Math.min(1, (clientY - r.top) / r.height));
+    controls.power = Math.max(0, Math.min(1, (clientX - r.left - 8) / (r.width - 16)));
   };
   slider.addEventListener('pointerdown', (e) => {
     if (!controls.beginPull()) return;
     capture(slider, e);
-    setFromY(e.clientY);
+    setFromX(e.clientX);
   });
   slider.addEventListener('pointermove', (e) => {
-    if (controls.pulling) setFromY(e.clientY);
+    if (controls.pulling) setFromX(e.clientX);
   });
   slider.addEventListener('pointerup', () => controls.endPull());
   slider.addEventListener('pointercancel', () => {
@@ -76,10 +78,10 @@ export function createTouchUi(controls) {
   // Заполнение ползунка показывает текущую силу.
   return {
     update(target = null) {
-      fill.style.height = `${Math.round(controls.power * 100)}%`;
+      fill.style.width = `${Math.round(controls.power * 100)}%`;
       slider.classList.toggle('disabled', !controls.enabled);
       mark.hidden = target == null;
-      if (target != null) mark.style.top = `${target * 100}%`;
+      if (target != null) mark.style.left = `${target * 100}%`;
     },
   };
 }

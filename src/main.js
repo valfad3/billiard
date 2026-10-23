@@ -94,10 +94,16 @@ if (matchMedia('(pointer: coarse)').matches) markTouch();
 window.addEventListener('pointerdown', (e) => e.pointerType === 'touch' && markTouch());
 const isTouch = () => document.body.classList.contains('touch');
 const touchUi = createTouchUi(controls);
-document.getElementById('btn-panel').addEventListener('click', () => {
-  const open = document.body.classList.toggle('panel-open');
+// Шторка с панелью (на телефоне): открыть/закрыть.
+function setPanelOpen(open) {
+  document.body.classList.toggle('panel-open', open);
   document.getElementById('btn-panel').textContent = open ? '✕ Закрыть' : '☰ Панель';
-});
+}
+document.getElementById('btn-panel').addEventListener('click', () =>
+  setPanelOpen(!document.body.classList.contains('panel-open')),
+);
+// Нажатие на полоску с заданием школы — открыть панель с подробностями.
+document.getElementById('school-banner').addEventListener('click', () => setPanelOpen(true));
 
 createArranger(canvas, app);
 placeBalls(START);
@@ -114,6 +120,8 @@ const school = createSchool({
     predictionEpoch++;
     autoCam.phase = 'aim'; // камера — сразу за кий
   },
+  // Выбрал удар/уровень или нажал «Ударить» — на телефоне шторка закрывается, виден стол.
+  onAction: () => setPanelOpen(false),
 });
 
 // Упражнения: что сохраняем и как восстанавливаем.
@@ -198,6 +206,7 @@ function setMode(mode) {
   document.getElementById('game-panel').hidden = mode !== 'pyramid';
   document.getElementById('school-panel').hidden = mode !== 'school';
   document.getElementById('school-more').hidden = mode !== 'school';
+  document.getElementById('school-banner').hidden = mode !== 'school';
   document.body.classList.toggle('school-mode', mode === 'school');
 }
 btnShoot.addEventListener('click', () => setMode('shoot'));
@@ -466,8 +475,8 @@ function touchStatusText(cue) {
   if (isPyramid() && game.phase === 'over') return 'Партия окончена — «Новая партия» в панели';
   if (!cue || cue.pocketed) return 'Биток в лузе — «Повторить удар»';
   const pick = isPyramid() ? (controls.mode === 'cam' ? ' · двойное касание — биток' : ' · касание шара — биток') : '';
-  if (controls.mode === 'cam') return 'Веди пальцем вбок — поворот · касание — навести · ползунок слева — удар · щипок — зум' + pick;
-  return 'Касание — навести кий · веди пальцем — повернуть · ползунок слева — удар · ◀ ▶ — точно' + pick;
+  if (controls.mode === 'cam') return 'Веди пальцем вбок — поворот · касание — навести · полоса снизу — удар · щипок — зум' + pick;
+  return 'Касание — навести кий · веди пальцем — повернуть · полоса снизу — удар · ◀ ▶ — точно' + pick;
 }
 
 requestAnimationFrame(frame);
