@@ -5,7 +5,25 @@
     <!-- На телефоне: без масштабирования страницы пальцами (стол сам управляет жестами) -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#1b1b1b" />
-    <title>Тренажёр русского бильярда</title>
+    <title>Тренажёр русского бильярда — тренируй удары онлайн</title>
+    <meta name="description" content="Онлайн-тренажёр ударов в русском бильярде: научишься делать накат, оттяжку, винт и массе. 2D и 3D, подсказка траектории, свободная пирамида." />
+
+    <!-- Иконки: вкладка браузера и значок на главном экране телефона -->
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+
+    <!-- Карточка ссылки в Telegram, VK, WhatsApp и т.п. (Open Graph).
+         Адрес картинки обязательно полный — мессенджеры не понимают относительные пути. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Тренажёр русского бильярда" />
+    <meta property="og:title" content="Тренируй удары в русском бильярде" />
+    <meta property="og:description" content="Научишься делать разные удары: накат, оттяжку, винт и массе. 2D и 3D, траектория удара, свободная пирамида." />
+    <meta property="og:url" content="https://valfad3.github.io/billiard/" />
+    <meta property="og:image" content="https://valfad3.github.io/billiard/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="ru_RU" />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
@@ -17,6 +35,7 @@
         <button id="btn-mode-pyramid">Пирамида</button>
       </div>
       <div class="buttons">
+        <button id="btn-intro" title="О тренажёре">ℹ</button>
         <button id="btn-view">3D (V)</button>
         <span id="cam-buttons" class="buttons" hidden>
           <button id="btn-cam-cue" title="Камера за кием, после удара следит за шарами">Авто-камера (C)</button>
@@ -111,6 +130,30 @@
       </aside>
     </main>
     <footer id="status"></footer>
+
+    <!-- Стартовый экран: что это за сайт и чему тут научишься -->
+    <div id="intro" hidden>
+      <div class="intro-card">
+        <div class="intro-badge">Русский бильярд · онлайн-тренажёр</div>
+        <h2>Тренируй удары<br />в русском бильярде</h2>
+        <p class="intro-lead">
+          Расставляй шары как хочешь, повторяй удар сколько угодно раз и смотри, куда покатятся
+          шары. Здесь ты научишься делать разные удары:
+        </p>
+        <ul class="intro-shots">
+          <li><span class="tip tip-top"></span><div><b>Накат</b>Бьёшь выше центра — биток идёт за прицельным шаром</div></li>
+          <li><span class="tip tip-bottom"></span><div><b>Оттяжка</b>Ниже центра — биток откатывается назад</div></li>
+          <li><span class="tip tip-side"></span><div><b>Винт</b>Сбоку — меняет отскок от борта и «отбрасывает» шар</div></li>
+          <li><span class="tip tip-masse"></span><div><b>Массе</b>Поднятый кий и удар сбоку — шар идёт дугой</div></li>
+        </ul>
+        <p class="intro-extra">А ещё: 2D и 3D, подсказка траектории, сохранение упражнений и игра «Свободная пирамида» на счёт.</p>
+        <div class="intro-buttons">
+          <button id="intro-train" class="primary">Начать тренировку</button>
+          <button id="intro-pyramid">Свободная пирамида</button>
+        </div>
+        <label class="intro-hide"><input type="checkbox" id="intro-hide" /> Больше не показывать при запуске</label>
+      </div>
+    </div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

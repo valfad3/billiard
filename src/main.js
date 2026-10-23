@@ -6,6 +6,7 @@ import { strike } from './physics/cue.js';
 import { traceAim } from './physics/aim.js';
 import { fitView, setScreenToWorld, applyRotation } from './render/view.js';
 import { createTouchUi } from './ui/touchUi.js';
+import { createIntro } from './ui/intro.js';
 import { createRenderer3D } from './render/render3d.js';
 import { drawTable, drawBalls } from './render/table.js';
 import { predictShot, predictPockets } from './physics/predict.js';
@@ -165,6 +166,12 @@ function setMode(mode) {
 btnShoot.addEventListener('click', () => setMode('shoot'));
 btnArrange.addEventListener('click', () => setMode('arrange'));
 btnPyramid.addEventListener('click', () => setMode('pyramid'));
+
+// Стартовый экран с кнопками "Начать тренировку" и "Свободная пирамида".
+createIntro({
+  onTrain: () => setMode('shoot'),
+  onPyramid: () => setMode('pyramid'),
+});
 
 function repeatShot() {
   placeBalls(beforeShot);
