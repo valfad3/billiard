@@ -74,7 +74,8 @@ function makeRoomImpulse(seconds) {
 async function loadSamples() {
   for (const name of ['ball', 'cushion', 'pocket', 'cue']) {
     try {
-      const res = await fetch(`/sounds/${name}.mp3`);
+      // BASE_URL — папка, где лежит игра (на GitHub Pages это /billiard/), а не корень сайта.
+      const res = await fetch(`${import.meta.env.BASE_URL}sounds/${name}.mp3`);
       if (!res.ok || !(res.headers.get('content-type') || '').includes('audio')) continue;
       samples[name] = await ctx.decodeAudioData(await res.arrayBuffer());
     } catch {
