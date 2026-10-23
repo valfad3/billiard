@@ -1,0 +1,464 @@
+* {
+  box-sizing: border-box;
+}
+
+/* Скрытые элементы скрыты всегда, даже если у них есть свой display */
+[hidden] {
+  display: none !important;
+}
+
+body {
+  margin: 0;
+  height: 100vh;
+  height: 100dvh; /* на телефоне учитывает выезжающую адресную строку */
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  flex-direction: column;
+  background: #1b1b1b;
+  color: #eee;
+  font-family: system-ui, sans-serif;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  background: #262626;
+}
+
+h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.buttons {
+  display: flex;
+  gap: 8px;
+}
+
+button {
+  padding: 7px 14px;
+  border: 1px solid #555;
+  border-radius: 6px;
+  background: #333;
+  color: #eee;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #444;
+}
+
+/* Переключатель режимов: две кнопки, слитые в одну полоску */
+.toggle {
+  display: flex;
+}
+
+.toggle button {
+  border-radius: 0;
+}
+
+.toggle button:first-child {
+  border-radius: 6px 0 0 6px;
+}
+
+.toggle button:last-child {
+  border-radius: 0 6px 6px 0;
+  border-left: none;
+}
+
+#btn-cam-cue.active,
+#btn-view.active,
+#btn-lock.active {
+  background: #b36b2b;
+  border-color: #b36b2b;
+  color: #fff;
+}
+
+.toggle button.active {
+  background: #2b6fb3;
+  border-color: #2b6fb3;
+  color: #fff;
+}
+
+/* Середина страницы: стол слева, панель управления справа */
+main {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+/* Сцена занимает всё свободное место, холсты лежат друг на друге */
+#stage {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+#stage canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#table {
+  cursor: crosshair;
+}
+
+aside {
+  width: 200px;
+  padding: 16px;
+  background: #222;
+  border-left: 1px solid #333;
+  text-align: center;
+}
+
+aside h2 {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+#spin {
+  width: 160px;
+  height: 160px;
+  cursor: pointer;
+}
+
+#spin-label {
+  margin: 8px 0;
+  font-size: 14px;
+  min-height: 2.6em;
+}
+
+.hint {
+  font-size: 12px;
+  color: #999;
+  line-height: 1.5;
+}
+
+.elev {
+  display: block;
+  margin: 4px 0 8px;
+  font-size: 13px;
+}
+
+.elev input {
+  width: 100%;
+  margin-top: 6px;
+  accent-color: #2b6fb3;
+}
+
+/* Панель счёта пирамиды */
+.score {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.score div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.score span {
+  font-size: 12px;
+  color: #aaa;
+}
+
+.score b {
+  font-size: 34px;
+  line-height: 1.1;
+}
+
+.score .sep {
+  font-size: 28px;
+  color: #777;
+}
+
+.stats {
+  width: 100%;
+  font-size: 13px;
+  border-collapse: collapse;
+}
+
+.stats td {
+  padding: 2px 0;
+  text-align: left;
+}
+
+.stats td:last-child {
+  text-align: right;
+  font-weight: 600;
+}
+
+#game-message {
+  min-height: 3em;
+  margin: 10px 0;
+  padding: 8px;
+  border-radius: 6px;
+  background: #2a2a2a;
+  font-size: 13px;
+  text-align: left;
+  line-height: 1.4;
+}
+
+#game-message.over {
+  background: #2b4f2b;
+}
+
+#btn-new-game {
+  width: 100%;
+}
+
+aside hr {
+  margin: 16px 0;
+  border: none;
+  border-top: 1px solid #333;
+}
+
+.sound-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: -10px 0 20px;
+}
+
+.sound-row .check {
+  margin: 0;
+}
+
+.sound-row input[type='range'] {
+  flex: 1;
+  min-width: 0;
+  accent-color: #2b6fb3;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 20px;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+}
+
+/* Панель справа прокручивается, если упражнений станет много */
+aside {
+  overflow-y: auto;
+}
+
+.save-row,
+.file-row {
+  display: flex;
+  gap: 6px;
+}
+
+.save-row input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid #555;
+  border-radius: 6px;
+  background: #1b1b1b;
+  color: #eee;
+  font-size: 13px;
+}
+
+.save-row button,
+.file-row button {
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.file-row button {
+  flex: 1;
+}
+
+#ex-list {
+  list-style: none;
+  margin: 10px 0;
+  padding: 0;
+  text-align: left;
+}
+
+#ex-list li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+#ex-list .ex-load {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  padding: 5px 8px;
+  font-size: 13px;
+}
+
+#ex-list .ex-del {
+  padding: 5px 9px;
+  font-size: 13px;
+  color: #e08080;
+}
+
+#ex-list .empty {
+  font-size: 12px;
+  color: #777;
+}
+
+footer {
+  padding: 8px 16px;
+  background: #262626;
+  font-size: 14px;
+  color: #bbb;
+}
+
+/* ===================== Телефон ===================== */
+
+/* Элементы только для сенсорных экранов и только для узких экранов */
+.touch-only,
+.mobile-only {
+  display: none;
+}
+body.touch .touch-only {
+  display: block;
+}
+
+/* Ползунок силы: тянешь вниз — кий отводится, отпускаешь — удар */
+#power-slider {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 46px;
+  height: 46%;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 23px;
+  background: rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  z-index: 5;
+}
+#power-slider .fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  background: linear-gradient(#3fae5a, #e0b23a 60%, #d9483b);
+}
+#power-slider span {
+  position: absolute;
+  bottom: 8px;
+  width: 100%;
+  text-align: center;
+  font-size: 11px;
+  color: #ddd;
+  pointer-events: none;
+}
+#power-slider.disabled {
+  opacity: 0.35;
+}
+
+/* Доводка прицела */
+#fine-aim {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  z-index: 5;
+}
+body.touch #fine-aim {
+  display: flex;
+  gap: 14px;
+}
+#fine-aim button {
+  width: 54px;
+  height: 44px;
+  border-radius: 22px;
+  font-size: 18px;
+  background: rgba(0, 0, 0, 0.5);
+  touch-action: none;
+}
+
+#btn-panel {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 30;
+  background: rgba(30, 30, 30, 0.85);
+}
+
+@media (max-width: 900px) {
+  .mobile-only {
+    display: block;
+  }
+
+  /* Шапка: компактная, кнопки в одну строку с прокруткой вбок */
+  header {
+    padding: 6px 8px;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  header::-webkit-scrollbar {
+    display: none;
+  }
+  h1 {
+    display: none;
+  }
+  header .buttons,
+  .toggle {
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+  }
+  header button {
+    padding: 6px 9px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  /* Правая панель превращается в шторку снизу */
+  aside {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    height: 60vh;
+    z-index: 20;
+    border-left: none;
+    border-top: 1px solid #444;
+    border-radius: 14px 14px 0 0;
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.5);
+    transform: translateY(105%);
+    transition: transform 0.25s ease;
+  }
+  body.panel-open aside {
+    transform: none;
+  }
+  body.panel-open #btn-panel {
+    bottom: calc(60vh + 10px);
+  }
+
+  footer {
+    padding: 4px 8px;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
